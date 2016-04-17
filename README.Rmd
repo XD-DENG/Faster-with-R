@@ -11,9 +11,8 @@ library(microbenchmark)
 
 # Basic setting ---------------------------
 set.seed(100)
-N = 5e5L
-benchmark_times <- 30
-print("H")
+N = 5e7L
+benchmark_times <- 20
 ```
 
 ### How to subset a table faster 
@@ -34,7 +33,10 @@ identical(ans1$val, ans2$val)
 ```
 
 
-### How to subset a table faster 
+
+
+
+### How to update a table faster 
 
 ```{r}
 DF <- data.frame(x = sample(letters, N, TRUE), 
@@ -75,4 +77,20 @@ microbenchmark(DF$y <- 0,
                DT[, y := 0],
                DT[, `:=`(y = 0)],
                times = benchmark_times)
+```
+
+### How to Sort Your Table Faster
+```{r}
+# Generate the sample data.
+DF <- data.frame(x = sample(letters, N, TRUE), 
+                 y = sample(1000L, N, TRUE), 
+                 val=runif(N))
+DT <- as.data.table(DF)
+```
+
+```{r}
+microbenchmark(DF <- DF[order(DF$x, DF$y),],
+               DT <- DT[order(x, y)],
+               times = benchmark_times)
+
 ```
