@@ -6,13 +6,15 @@ However, on the other hand, I must defend R's performance. Even if it's not a Fe
 
 In this repo, I would introduce several methods helping us achieve better performance of R language, and do simple benchmarking as well. Deep theory part will not be covered here. What are going to be introduced here are all hand-on methods and should be easy to learn & convenient to adopt.
 
-
-
 (For better accuracy, we use *microbenchmark* package to do the benchmarking.)
 
+- [apply family](#apply-family)
+- ["*compiler*" Package: A Byte Code Compiler for R](#compiler-package)
+- [Parallel Computing (multil-core)](parallel-computing)
+- ["*data.table*", a faster alternative of data.frame](data-table)
 
 
-# *apply* family
+# *apply* Family
 
 
 ```{r}
