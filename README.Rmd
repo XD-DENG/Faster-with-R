@@ -8,11 +8,10 @@ In this repo, I would introduce several methods helping us achieve better perfor
 
 (For better accuracy, we use *microbenchmark* package to do the benchmarking.)
 
-- [apply family](#apply-family)
-- [compiler Package: A Byte Code Compiler for R](#compiler-package)
-- [Parallel Computing (multil-core)](#parallel-computing)
-- [data.table, a faster alternative of data.frame](#data.table)
-
+- *apply* family
+- *compiler Package*: A Byte Code Compiler for R
+- Parallel Computing (multil-core)
+- *data.table*, a faster alternative of data.frame
 
 # *apply* Family
 
@@ -52,7 +51,7 @@ identical(b.1, b.2)
 
 
 
-# compiler Package: A Byte Code Compiler for R
+# *compiler* Package: A Byte Code Compiler for R
 
 Even if we insist in using FOR loop, there is still another way which can help. 
 
@@ -91,7 +90,7 @@ identical(a.1, a.2)
 
 
 
-# Parallel Computing
+# Parallel Computing (multi-core)
 
 Parallel computing is another way help us accelerate. Here we would only talk about how to implement parallel computing on a single multi-core machine, rather than a cluster (multile-computers). There are a few packages out there helping us do parallel computing, including *snowfall*, *parallel*, and *foreach*.
 
@@ -204,7 +203,7 @@ There are also some R packages using GPU or cluster to do parallel computing, li
 
 
 
-# data.table, a faster alternative of data.frame
+# *data.table*, a faster alternative of data.frame
 
 This section is to illustrate how we can fasten our R code with *data.table* package, an extension & enhancement of data.frame.
 
