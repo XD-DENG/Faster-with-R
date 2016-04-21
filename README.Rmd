@@ -215,8 +215,13 @@ library(microbenchmark)
 
 # Basic setting ---------------------------
 set.seed(100)
+<<<<<<< Updated upstream
 N = 5e3L
 benchmark_times <- 5
+=======
+N = 5e5L
+benchmark_times <- 30
+>>>>>>> Stashed changes
 ```
 
 ### How to subset a table faster 
@@ -290,9 +295,8 @@ DF <- data.frame(x = sample(letters, N, TRUE),
                  y = sample(1000L, N, TRUE), 
                  val=runif(N))
 DT <- as.data.table(DF)
-```
 
-```{r}
+
 microbenchmark(DF <- DF[order(DF$x, DF$y),],
                DT <- DT[order(x, y)],
                times = benchmark_times)
