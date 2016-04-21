@@ -8,7 +8,7 @@ In this repo, I would introduce several methods helping us achieve better perfor
 
 
 
-
+(For better accuracy, we use *microbenchmark* package to do the benchmarking.)
 
 
 
@@ -54,7 +54,7 @@ identical(b.1, b.2)
 
 Even if we insist in using FOR loop, there is still another way which can help. 
 
-Luke Tierney developed *compiler* package as an implementation of the byte code compiler for R. It produces code for a virtual machine that is then executed by a virtual machine runtime system. A byte code object consists of an integerr vector representing instruction opcodes and operands, and a generic vector representing a constant pool [1].
+[Luke Tierney](http://homepage.stat.uiowa.edu/~luke/) developed *compiler* package as an implementation of the byte code compiler for R. It produces code for a virtual machine that is then executed by a virtual machine runtime system. A byte code object consists of an integerr vector representing instruction opcodes and operands, and a generic vector representing a constant pool [1](http://homepage.stat.uiowa.edu/~luke/R/compiler/compiler.pdf).
 
 ```{r}
 library(compiler)
@@ -202,17 +202,10 @@ There are also some R packages using GPU or cluster to do parallel computing, li
 
 
 
-
-
-
-
-
-
 # "*data.table*", a faster alternative of data.frame
 
-This section is to illustrate how we can fasten our R code with *data.table* package.
+This section is to illustrate how we can fasten our R code with *data.table* package, an extension & enhancement of data.frame.
 
-We use *microbenchmark* to do the benchmarking for better accuracy.
 
 ```{r}
 rm(list=ls())
