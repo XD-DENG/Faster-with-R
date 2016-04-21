@@ -1,6 +1,216 @@
-# Faster, Even Faster - with Package '*data.table*'
+# Faster, Even Faster, with R Language
 
-This repo is to illustrate how we can fasten our R code with *data.table* package.
+It happens quite often that someone comes to me and complains that R is not a fast language, or even quite slow in some situations. On one hand, I must admit that R is not a "Ferrari" language. It was not designed to be one of the fastest ones. Instead, it's a domain-specific language, for data analytics. Some fundamental designs DO constraint its speed.  
+
+However, on the other hand, I must defend R's performance. Even if it's not a Ferrari, it's not a tractor. In most situations, R runs slowly simply because it's not used in the right way. The most common example is FOR loop. While R runs extremely slowly with FOR loop (and even growing slowly in each iteration), there are more than one alternative methods in R that run much faster and achieve perfectly the same target.
+
+In this repo, I would introduce several methods helping us achieve better performance of R language, and do simple benchmarking as well. Deep theory part will not be covered here. What are going to be introduced here are all hand-on methods and should be easy to learn & convenient to adopt.
+
+
+
+
+
+
+
+# *apply* family
+
+
+```{r}
+rm(list=ls())
+library(microbenchmark)
+
+a <- 1:1e5
+
+f.1 <- function(x){
+  n <- length(x)
+  result <- rep(0, n)
+  for(i in 1:n){
+    result[i] <- exp(x[i])
+  }
+  return(result)
+}
+
+f.2 <- function(x){
+  result <- sapply(x, exp)
+  return(result)
+}
+
+microbenchmark(b.1 <- f.1(a),
+               b.2 <- f.2(a), 
+               times = 50)
+
+identical(b.1, b.2)
+
+```
+
+
+
+
+
+
+
+
+# "*compiler*" Package: A Byte Code Compiler for R
+
+Even if we insist in using FOR loop, there is still another way which can help. 
+
+Luke Tierney developed *compiler* package as an implementation of the byte code compiler for R. It produces code for a virtual machine that is then executed by a virtual machine runtime system. A byte code object consists of an integerr vector representing instruction opcodes and operands, and a generic vector representing a constant pool [1].
+
+```{r}
+library(compiler)
+library(microbenchmark)
+
+FUN <- function(x){
+  temp <- 0
+  for(i in 1:length(x)){
+    temp <- temp+i
+  }
+  return(temp)
+}
+
+FUN_cmp <- cmpfun(FUN)
+
+x <- 1:1e4
+microbenchmark(a.1 <- FUN(x),
+               a.2 <- FUN_cmp(x),
+               times = 50)
+
+identical(a.1, a.2)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+# Parallel Computing (multicore)
+
+Parallel computing is another way help us accelerate. Here we would only talk about how to implement parallel computing on a single multi-core machine, rather than a cluster (multile-computers). There are a few packages out there helping us do parallel computing, including *snowfall*, *parallel*, and *foreach*.
+
+```{r}
+rm(list=ls())
+library(microbenchmark)
+
+library(snowfall)  # dependes on package "snow"
+library(parallel)
+
+
+# define the function for testing
+calcPar <- function( x ) {
+  
+  set.seed(123) # set the seed so that I can check if different methods return the same results
+  
+  x1 <- matrix( 0, x, x )
+  x2 <- matrix( 0, x, x )
+  
+  for(var in 1:nrow(x1)) 
+    x1[var,] = runif(ncol(x1))
+  for(var in 1:nrow(x2)) 
+    x2[var,] = runif(ncol(x1))
+  
+  b <- sum(diag((x1 %*% x2) %*% x1))
+  return(b)
+}
+
+index_to_run <- rep(200, 100)  # The 2nd argument is the length of the 'index_to_run'
+
+# how many time to run the microbenchmark functionn
+benchmark.neval <- 5
+
+
+# =========================================================================
+# 'snowfall' package ------------------------------------------------------
+
+# Note: If your computation requires some data, like you need to use a data.frame within the function you specified,
+#       then you need to export the required data to each node with function "sfExport()"
+#       Otherwise you will encounter an error like:
+
+#       "Error in checkForRemoteErrors(val) : 
+#         32 nodes produced errors; first error: object 'ODS_NUH_DM_CASE_MOVEMENT' not found"
+
+# initialize the cluster
+sfInit(parallel=TRUE, cpus=parallel::detectCores())
+
+# sfClusterApplyLB means "load balance". It can help balance the load on each node if the capability of the nodes are different
+benchmark.result.snowfall <- microbenchmark(result.1 <- sapply(index_to_run, calcPar),
+                                   result.2 <- unlist(sfClusterApplyLB(index_to_run, calcPar)),
+                                   result.3 <- sfSapply(index_to_run, calcPar),
+                                   times = benchmark.neval)
+# shut off the cluster
+sfStop()
+
+
+
+# =========================================================================
+# 'parallel' package ------------------------------------------------------
+
+# http://www.win-vector.com/blog/2016/01/parallel-computing-in-r/
+
+parallelCluster <- parallel::makeCluster(parallel::detectCores())
+
+benchmark.result.par <- microbenchmark(result.4 <- parSapply(parallelCluster, index_to_run, FUN=calcPar),
+                                   times = benchmark.neval)
+
+stopCluster(parallelCluster)
+
+
+
+# =========================================================================
+# check the result & Compare timing ---------------------------------------
+
+identical(result.1, result.2)
+identical(result.1, result.3)
+identical(result.1, result.4)
+
+print(benchmark.result.snowfall)
+print(benchmark.result.par)
+
+
+
+# =========================================================================
+# 'foreach' package -------------------------------------------------------
+# https://cran.r-project.org/web/packages/foreach/vignettes/foreach.pdf
+# https://cran.r-project.org/web/packages/doMC/vignettes/gettingstartedMC.pdf
+
+# a combination of "foreach" and "doMC" can implement parallel computing
+# 'foreach' alone can't implement parallel computing
+
+# library(foreach)
+# library(doMC)
+# 
+# registerDoMC(parallel::detectCores())
+# 
+# microbenchmark(x.1 <- foreach(i=index_to_run, .combine='c') %do% calcPar(i),
+#                x.2 <- foreach(i=index_to_run, .combine='c') %dopar% calcPar(i), 
+#                x.3 <- sapply(index_to_run, calcPar), 
+#                times = benchmark.neval)
+```
+
+
+There are also some R packages using GPU or cluster to do parallel computing, like "*Rth*" (Parallel R through Thrust). But they require more knowledge to handle, and sometimes require specific hardware (not every PC is equipped with GPU supporting parallel computing, and some parallel computing platform only supports support specific GPU brand).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# "*data.table*", a faster alternative of data.frame
+
+This section is to illustrate how we can fasten our R code with *data.table* package.
 
 We use *microbenchmark* to do the benchmarking for better accuracy.
 
@@ -11,8 +221,8 @@ library(microbenchmark)
 
 # Basic setting ---------------------------
 set.seed(100)
-N = 5e7L
-benchmark_times <- 20
+N = 5e3L
+benchmark_times <- 5
 ```
 
 ### How to subset a table faster 
@@ -94,3 +304,6 @@ microbenchmark(DF <- DF[order(DF$x, DF$y),],
                times = benchmark_times)
 
 ```
+
+# References
+[1] Tierney L. A Byte Code Compiler for R[J]. system, 2014, 6: 0.010.
