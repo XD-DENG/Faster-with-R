@@ -52,7 +52,7 @@ identical(b.1, b.2)
 
 
 
-# *compiler* Package: A Byte Code Compiler for R
+# compiler Package: A Byte Code Compiler for R
 
 Even if we insist in using FOR loop, there is still another way which can help. 
 
@@ -204,7 +204,7 @@ There are also some R packages using GPU or cluster to do parallel computing, li
 
 
 
-# "*data.table*", a faster alternative of data.frame
+# data.table, a faster alternative of data.frame
 
 This section is to illustrate how we can fasten our R code with *data.table* package, an extension & enhancement of data.frame.
 
