@@ -305,18 +305,19 @@ microbenchmark(DF <- DF[order(DF$x, DF$y),],
 ```{r}
 rm(list=ls())
 
-dat <- data.frame(A = 1:1e7,
-                  B=sample(letters, 1e7, replace = TRUE),
-                  C=sample(LETTERS, 1e7, replace = TRUE),
-                  D= rnorm(1e7),
+sample_data_size <- 1e6
+dat <- data.frame(A = 1:sample_data_size,
+                  B=sample(letters, sample_data_size, replace = TRUE),
+                  C=sample(LETTERS, sample_data_size, replace = TRUE),
+                  D= rnorm(sample_data_size),
                   stringsAsFactors = FALSE)
 write.csv(dat, file = "test_dat_A.csv", row.names = FALSE)
 save(dat, file = "test_dat_B.RData")
 rm(dat)
 
 # Compare data file size
-file.size("test_dat_A.csv")
-file.size("test_dat_B.RData")
+cat("Size of .CSV file:", file.size("test_dat_A.csv"), "\n")
+cat("Size of .RData file:", file.size("test_dat_B.RData"), "\n")
 
 library(microbenchmark)
 library(data.table)
@@ -334,16 +335,88 @@ file.remove("test_dat_A.csv")
 file.remove(("test_dat_B.RData"))
 ```
 
+To use .RData file to save data, the output file will be much smaller than that if we use .CSV. The speed to import the data back is fairly fast too.
 ```
-Unit: seconds
-                                                          expr       min        lq      mean    median
-                                      load("test_dat_B.RData")  6.074962  6.441726  7.720662  7.401062
- dat_1 <- read.csv("test_dat_A.csv", stringsAsFactors = FALSE) 50.497798 52.256679 56.617414 53.872500
-                              dat_2 <- fread("test_dat_A.csv")  2.983866  3.371028  4.065156  3.689412
-        uq       max neval
-  8.949302 10.420226    10
- 55.517862 83.598297    10
-  4.453677  6.214524    10
+Size of .CSV file: 33048588 
+Size of .RData file: 11771229 
+
+Unit: milliseconds
+                                                          expr       min        lq      mean    median        uq       max neval
+                                      load("test_dat_B.RData")  620.4623  638.1426  754.0430  717.9783  873.9994  926.0873    10
+ dat_1 <- read.csv("test_dat_A.csv", stringsAsFactors = FALSE) 4254.0587 4552.2951 4767.0006 4679.3337 4977.0350 5411.7165    10
+                              dat_2 <- fread("test_dat_A.csv")  310.8418  318.7322  376.7557  336.8121  423.9722  574.1787    10
+```
+
+
+Another situation is that we may have multiple data to save. If we do this with .CSV, we will have multiple .CSV files. But if we use .RData, we only need one output file. In this situation, the advantages of using .RData will be more obvious. 
+
+```{r}
+rm(list=ls())
+
+sample_data_size <- 1e6
+dat_1 <- data.frame(A = 1:sample_data_size,
+                  B=sample(letters, sample_data_size, replace = TRUE),
+                  C=sample(LETTERS, sample_data_size, replace = TRUE),
+                  D= rnorm(sample_data_size),
+                  stringsAsFactors = FALSE)
+dat_2 <- dat_1
+dat_3 <- dat_1
+
+write.csv(dat_1, file = "test_dat_A_1.csv", row.names = FALSE)
+write.csv(dat_2, file = "test_dat_A_2.csv", row.names = FALSE)
+write.csv(dat_3, file = "test_dat_A_3.csv", row.names = FALSE)
+
+save(dat_1, dat_2, dat_3, file = "test_dat_B.RData")
+
+rm(dat_1)
+rm(dat_2)
+rm(dat_3)
+
+# Compare data file size
+cat("Size of .CSV files:", 
+    file.size("test_dat_A_1.csv") + file.size("test_dat_A_2.csv") + file.size("test_dat_A_3.csv"), 
+    "\n")
+cat("Size of .RData file:", 
+    file.size("test_dat_B.RData"), 
+    "\n")
+
+library(microbenchmark)
+library(data.table)
+
+import_process_1 <- function(){
+  load("test_dat_B.RData")
+}
+import_process_2 <- function(){
+  dat_1_1 <- read.csv("test_dat_A_1.csv", stringsAsFactors = FALSE)
+  dat_1_2 <- read.csv("test_dat_A_2.csv", stringsAsFactors = FALSE)
+  dat_1_3 <- read.csv("test_dat_A_3.csv", stringsAsFactors = FALSE)
+}
+import_process_3 <- function(){
+  dat_2_1 <- fread("test_dat_A_1.csv")
+  dat_2_2 <- fread("test_dat_A_2.csv")
+  dat_2_3 <- fread("test_dat_A_3.csv")
+}
+
+microbenchmark(import_process_1(),
+               import_process_2(),
+               import_process_3(), 
+               times = 10)
+
+file.remove("test_dat_A_1.csv")
+file.remove("test_dat_A_2.csv")
+file.remove("test_dat_A_3.csv")
+file.remove(("test_dat_B.RData"))
+```
+
+```
+Size of .CSV files: 99146280 
+Size of .RData file: 35320560 
+
+Unit: milliseconds
+               expr        min         lq      mean     median        uq       max neval
+ import_process_1()  1808.3698  1910.7440  2088.795  2021.7099  2251.209  2515.991    10
+ import_process_2() 13159.7801 13783.7613 15023.730 14491.3495 15622.169 17981.556    10
+ import_process_3()   910.9525   923.9968  1128.263   961.0881  1220.323  1710.529    10
 ```
 
 # References
