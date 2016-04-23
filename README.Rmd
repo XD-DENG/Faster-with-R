@@ -12,6 +12,7 @@ In this repo, I would introduce several methods helping us achieve better perfor
 - *compiler Package*: A Byte Code Compiler for R
 - Parallel Computing (multil-core)
 - *data.table*, a faster alternative of data.frame
+- Use *fread()* to import data, or Use *.RData* to Save & Exchange Data
 
 # *apply* Family
 
@@ -297,6 +298,52 @@ microbenchmark(DF <- DF[order(DF$x, DF$y),],
                DT <- DT[order(x, y)],
                times = benchmark_times)
 
+```
+
+
+# Use *fread()* to import data, or Use *.RData* to Save & Exchange Data
+```{r}
+rm(list=ls())
+
+dat <- data.frame(A = 1:1e7,
+                  B=sample(letters, 1e7, replace = TRUE),
+                  C=sample(LETTERS, 1e7, replace = TRUE),
+                  D= rnorm(1e7),
+                  stringsAsFactors = FALSE)
+write.csv(dat, file = "test_dat_A.csv", row.names = FALSE)
+save(dat, file = "test_dat_B.RData")
+rm(dat)
+
+# Compare data file size
+file.size("test_dat_A.csv")
+file.size("test_dat_B.RData")
+
+library(microbenchmark)
+library(data.table)
+
+microbenchmark(load("test_dat_B.RData"),
+               dat_1 <- read.csv("test_dat_A.csv", stringsAsFactors = FALSE),
+               dat_2 <- fread("test_dat_A.csv"),
+               times = 10)
+
+dat_2 <- as.data.frame(dat_2)
+all.equal(dat, dat_1)
+all.equal(dat_1, dat_2)
+
+file.remove("test_dat_A.csv")
+file.remove(("test_dat_B.RData"))
+```
+
+```
+Unit: seconds
+                                                          expr       min        lq      mean    median
+                                      load("test_dat_B.RData")  6.074962  6.441726  7.720662  7.401062
+ dat_1 <- read.csv("test_dat_A.csv", stringsAsFactors = FALSE) 50.497798 52.256679 56.617414 53.872500
+                              dat_2 <- fread("test_dat_A.csv")  2.983866  3.371028  4.065156  3.689412
+        uq       max neval
+  8.949302 10.420226    10
+ 55.517862 83.598297    10
+  4.453677  6.214524    10
 ```
 
 # References
