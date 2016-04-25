@@ -408,6 +408,7 @@ file.remove("test_dat_A_3.csv")
 file.remove(("test_dat_B.RData"))
 ```
 
+Result on a MacBook Pro (2.7GHz Intel Core i5, 16GB 1867 MHz DDR3)
 ```
 Size of .CSV files: 99146280 
 Size of .RData file: 35320560 
@@ -417,6 +418,18 @@ Unit: milliseconds
  import_process_1()  1808.3698  1910.7440  2088.795  2021.7099  2251.209  2515.991    10
  import_process_2() 13159.7801 13783.7613 15023.730 14491.3495 15622.169 17981.556    10
  import_process_3()   910.9525   923.9968  1128.263   961.0881  1220.323  1710.529    10
+```
+
+Result on a Windows machine (Intel(R) i5-4590 CPUT @ 3.30GHz, 4GB RAM, 64 bit)
+```
+Size of .CSV files: 102146328
+Size of .RData file: 35322082
+ 
+Unit: seconds
+               expr      min       lq     mean   median       uq       max neval
+ import_process_1() 1.413144 1.473527 1.655877 1.614003 1.821402  2.087821    10
+ import_process_2() 8.110042 8.770646 9.181733 8.917301 9.511460 10.775027    10
+ import_process_3() 2.590179 2.640683 2.744800 2.732253 2.763073  2.986469    10
 ```
 
 # References
