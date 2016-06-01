@@ -8,11 +8,11 @@ In this repo, I would introduce several methods helping us achieve better perfor
 
 (For better accuracy, we use *microbenchmark* package to do the benchmarking.)
 
-- *apply* family
-- *compiler Package*: A Byte Code Compiler for R
-- Parallel Computing (multil-core)
-- *data.table*, a faster alternative of data.frame
-- Use *fread()* to import data, or Use *.RData* to Save & Exchange Data
+- [*apply* family](#apply-family)
+- [*compiler Package*: A Byte Code Compiler for R](#compiler-package-a-byte-code-compiler-for-r)
+- [Parallel Computing (multil-core)](#parallel-computing-multi-core)
+- [*data.table*, a faster alternative of data.frame](#datatable-a-faster-alternative-of-dataframe)
+- [Use *fread()* to import data, or Use *.RData* to Save & Exchange Data](#use-fread-to-import-data-or-use-rdata-to-save--exchange-data)
 
 # *apply* Family
 
