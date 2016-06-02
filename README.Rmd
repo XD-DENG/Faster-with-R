@@ -216,7 +216,7 @@ library(microbenchmark)
 
 # Basic setting ---------------------------
 set.seed(100)
-N = 5e3L
+N = 5e5L
 benchmark_times <- 5
 ```
 
