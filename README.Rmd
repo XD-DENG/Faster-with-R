@@ -85,7 +85,7 @@ x <- 12345678
 microbenchmark(a.1 <- FUN(x),
                a.2 <- FUN_cmp(x),
                a.3 <- FUN_R(x),
-               times = 1)
+               times = 10)
 
 print(a.1 == a.2)
 print(a.1 == a.3)
