@@ -58,26 +58,37 @@ Even if we insist in using FOR loop, there is still another way which can help.
 
 [Luke Tierney](http://homepage.stat.uiowa.edu/~luke/) developed *compiler* package as an implementation of the byte code compiler for R. It produces code for a virtual machine that is then executed by a virtual machine runtime system. A byte code object consists of an integerr vector representing instruction opcodes and operands, and a generic vector representing a constant pool [1](http://homepage.stat.uiowa.edu/~luke/R/compiler/compiler.pdf).
 
+But if we have any built-in function to choose, it's better to use them as they're extremely well optimized (like the function *FUN_R()* below). Of course, we don't always have such choice, and **compiler** package would be able to help.
+
 ```{r}
 library(compiler)
 library(microbenchmark)
 
-FUN <- function(x){
+FUN <- function(x){   # "raw" function
   temp <- 0
-  for(i in 1:length(x)){
+  i=1
+  while(i<=x){
     temp <- temp+i
+    i =i+1
   }
   return(temp)
 }
 
-FUN_cmp <- cmpfun(FUN)
+FUN_cmp <- cmpfun(FUN) # generate bytecode function
 
-x <- 1:1e4
+FUN_R <- function(n){   # use built-in functions as alternative
+  sum(as.numeric(1:n))  # use as.numeric to avoid integer overflow
+}
+
+x <- 12345678
+
 microbenchmark(a.1 <- FUN(x),
                a.2 <- FUN_cmp(x),
-               times = 50)
+               a.3 <- FUN_R(x),
+               times = 1)
 
-identical(a.1, a.2)
+print(a.1 == a.2)
+print(a.1 == a.3)
 ```
 
 
