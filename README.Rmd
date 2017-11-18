@@ -12,7 +12,8 @@ In this repo, I would introduce several methods helping us achieve better perfor
 - [*compiler Package*: A Byte Code Compiler for R](#compiler-package-a-byte-code-compiler-for-r)
 - [Parallel Computing (multil-core)](#parallel-computing-multi-core)
 - [*data.table*, a faster alternative of data.frame](#datatable-a-faster-alternative-of-dataframe)
-- [Always use matrix when you can, rather than data.frame](##always-use-matrix-when-you-can-rather-than-dataframe)
+- [Always use vector (named) vector for looking-up when you can](#always-use-vector-named-vector-for-looking-up-when-you-can)
+- [Always use matrix when you can, rather than data.frame](#always-use-matrix-when-you-can-rather-than-dataframe)
 - [Use *fread()* to import data, or Use *.RData* to Save & Exchange Data](#use-fread-to-import-data-or-use-rdata-to-save--exchange-data)
 
 
