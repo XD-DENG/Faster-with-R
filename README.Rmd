@@ -12,7 +12,9 @@ In this repo, I would introduce several methods helping us achieve better perfor
 - [*compiler Package*: A Byte Code Compiler for R](#compiler-package-a-byte-code-compiler-for-r)
 - [Parallel Computing (multil-core)](#parallel-computing-multi-core)
 - [*data.table*, a faster alternative of data.frame](#datatable-a-faster-alternative-of-dataframe)
+- [Always use matrix when you can, rather than data.frame](##always-use-matrix-when-you-can-rather-than-dataframe)
 - [Use *fread()* to import data, or Use *.RData* to Save & Exchange Data](#use-fread-to-import-data-or-use-rdata-to-save--exchange-data)
+
 
 # *apply* Family
 
@@ -311,6 +313,80 @@ microbenchmark(DF <- DF[order(DF$x, DF$y),],
 
 ```
 
+# Always use vector (named) vector for looking-up when you can
+
+Sometimes we need to build "mapping tables"", like converting "M" to "Male" and "F" to "Female". There are a few methods to do the same thing, but the performances are quite different.
+
+```{r}
+library(microbenchmark)
+
+dat_1 <- iris[, c("Petal.Width", "Species")]
+dat_1$Species <- as.integer(dat_1$Species)
+dat_2 <- dat_1$Petal.Width
+names(dat_2) <- dat_1$Species
+
+
+n = 5000
+
+microbenchmark(result_1 <- sapply(sample(x = 1:3, replace = TRUE, size = n), function(x){mean(dat_1$Petal.Width[dat_1$Species == x])}),
+
+               result_2 <- sapply(sample(x = 1:3, replace = TRUE, size = n), function(x){mean(dat_2[x])}),
+
+               times = 10)
+```
+
+*Output*:
+
+```
+Unit: milliseconds
+                                                                                                                                        expr
+ result_1 <- sapply(sample(x = 1:3, replace = TRUE, size = n),      function(x) {         mean(dat_1$Petal.Width[dat_1$Species == x])     })
+                              result_2 <- sapply(sample(x = 1:3, replace = TRUE, size = n),      function(x) {         mean(dat_2[x])     })
+       min        lq      mean   median        uq       max neval
+ 106.28901 117.00018 123.13839 118.7960 127.81774 154.79024    10
+  19.81746  20.88156  23.05026  23.1484  24.08003  26.21583    10
+```
+
+# Always use matrix when you can, rather than data.frame
+
+It's quite common that we need to operate on table-like data. Sometimes all the variables in the "table" are of the same type, e.g., they're all float type. In this kind of situations, you may want to use matrix rather than data.frame. 
+
+Why?
+
+*Data.frame* is actually a special list containing a few sequences. These sequences can be of different types, like we can have character strings, integers, floats and boolen varialbes in one single data.frame. This is why data.frame is fancy. But it will also take extra time for R to identify the types when we operate on data.frame. For matrix we don't have such concern as all the values in one matrix need to be of the same type.
+
+So if all the values in your table-like data are of the same type, use a matrix rather than a data.frame. The example below would explain how siginificantly this choice can help.
+
+```{r}
+rm(list=ls())
+
+# Build a matrix and a data.frame with the same structures & values
+MT <- matrix(rep(0, 3*5e4), 5e4,3)
+DF <- data.frame(MT)
+
+
+# Define two functions to change the values randomly in matrix and data.frame separately
+change_MT <- function(i){
+  MT[i, sample(1:3,1)] <<- 1 
+}
+
+change_DF <- function(i){
+  DF[i, sample(1:3,1)] <<- 1 
+}
+
+
+# Timing
+result_MT <- system.time(sapply(1:5e4, change_MT))
+result_DF <- system.time(sapply(1:5e4, change_DF))
+
+cat("Time elapsed for matrix:", result_MT[3], "\n")
+cat("Time elapsed for data.frame:", result_DF[3], "\n")
+cat("Acceleration factor: ", result_DF[3]/result_MT[3])
+```
+
+On my laptop, the acceleration factor is over 60, which means doing the same operations on matrix can be 60x faster than that on data.frame.
+
+
 
 # Use *fread()* to import data, or Use *.RData* to Save & Exchange Data
 ```{r}
@@ -443,44 +519,6 @@ Unit: seconds
  import_process_3() 2.590179 2.640683 2.744800 2.732253 2.763073  2.986469    10
 ```
 
-# Always use matrix when you can, rather than data.frame
-
-It's quite common that we need to operate on table-like data. Sometimes all the variables in the "table" are of the same type, e.g., they're all float type. In this kind of situations, you may want to use matrix rather than data.frame. 
-
-Why?
-
-*Data.frame* is actually a special list containing a few sequences. These sequences can be of different types, like we can have character strings, integers, floats and boolen varialbes in one single data.frame. This is why data.frame is fancy. But it will also take extra time for R to identify the types when we operate on data.frame. For matrix we don't have such concern as all the values in one matrix need to be of the same type.
-
-So if all the values in your table-like data are of the same type, use a matrix rather than a data.frame. The example below would explain how siginificantly this choice can help.
-
-```{r}
-rm(list=ls())
-
-# Build a matrix and a data.frame with the same structures & values
-MT <- matrix(rep(0, 3*5e4), 5e4,3)
-DF <- data.frame(MT)
-
-
-# Define two functions to change the values randomly in matrix and data.frame separately
-change_MT <- function(i){
-  MT[i, sample(1:3,1)] <<- 1 
-}
-
-change_DF <- function(i){
-  DF[i, sample(1:3,1)] <<- 1 
-}
-
-
-# Timing
-result_MT <- system.time(sapply(1:5e4, change_MT))
-result_DF <- system.time(sapply(1:5e4, change_DF))
-
-cat("Time elapsed for matrix:", result_MT[3], "\n")
-cat("Time elapsed for data.frame:", result_DF[3], "\n")
-cat("Acceleration factor: ", result_DF[3]/result_MT[3])
-```
-
-On my laptop, the acceleration factor is over 60, which means doing the same operations on matrix can be 60x faster than that on data.frame.
 
 # References
 [1] Tierney L. A Byte Code Compiler for R[J]. system, 2014, 6: 0.010.
